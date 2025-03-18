@@ -1,0 +1,2983 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>道士修炼模拟器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Microsoft YaHei', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+            background-color: #f3ece7;
+            /* background-image: url('https://img.freepik.com/free-photo/chinese-pavilion-mountains_1150-17812.jpg'); */
+            background-size: cover;
+            background-attachment: fixed;
+            background-position: center;
+            padding: 10px;
+            font-size: 16px;
+            /* 添加默认字体大小 */
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 15px;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.2);
+            /* 增强阴影效果 */
+            backdrop-filter: blur(5px);
+            /* 添加背景模糊效果 */
+            -webkit-backdrop-filter: blur(5px);
+            /* Safari支持 */
+        }
+
+        header {
+            text-align: center;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        h1 {
+            color: #8b4513;
+            font-size: 1.8em;
+            text-shadow: 1px 1px 2px #ccc;
+        }
+
+        .section {
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 8px;
+            border-left: 4px solid #8b4513;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+        }
+
+        .section-header {
+            background-color: rgba(139, 69, 19, 0.1);
+            padding: 10px 15px;
+            border-bottom: 1px solid rgba(139, 69, 19, 0.2);
+        }
+
+        .section-content {
+            padding: 15px;
+        }
+
+        h2 {
+            color: #8b4513;
+            margin: 0;
+            font-size: 1.3em;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 10px;
+        }
+
+        .stat {
+            background-color: #f9f9f9;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            font-size: 0.95em;
+            transition: all 0.2s;
+        }
+
+        .stat:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-name {
+            font-weight: bold;
+            color: #555;
+        }
+
+        .stat-value {
+            float: right;
+            color: #8b4513;
+            font-weight: bold;
+        }
+
+        .activities {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 10px;
+        }
+
+        .activity {
+            background-color: #f9f9f9;
+            padding: 12px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            cursor: pointer;
+            transition: all 0.3s;
+            min-height: 80px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .activity:hover,
+        .activity:active {
+            background-color: #e9e9e9;
+            transform: translateY(-3px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .activity.active {
+            background-color: rgba(139, 69, 19, 0.15);
+            border-color: #8b4513;
+            box-shadow: 0 0 0 2px rgba(139, 69, 19, 0.3);
+        }
+
+        .activity.locked {
+            background-color: #f0f0f0;
+            opacity: 0.7;
+            cursor: not-allowed;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .activity.locked::before {
+            content: "🔒";
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            font-size: 16px;
+            color: #8b4513;
+        }
+
+        .activity.locked::after {
+            content: "未解锁";
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 5px;
+            background-color: rgba(139, 69, 19, 0.5);
+            color: white;
+            font-size: 0.8em;
+            text-align: center;
+        }
+
+        .unlock-tooltip {
+            position: absolute;
+            bottom: 25px;
+            left: 0;
+            right: 0;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 8px;
+            font-size: 0.75em;
+            border-radius: 4px;
+            z-index: 10;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+            text-align: left;
+            line-height: 1.4;
+        }
+
+        .activity.locked:hover .unlock-tooltip {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .activity-name {
+            font-weight: bold;
+            color: #555;
+            margin-bottom: 5px;
+        }
+
+        .activity-desc {
+            font-size: 0.85em;
+            color: #777;
+            flex-grow: 1;
+        }
+
+        /* 状态和日志部分新样式 */
+        .afk-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .status-section {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .current-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background-color: #f9f9f9;
+            padding: 12px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+
+        .status-icon {
+            width: 40px;
+            height: 40px;
+            background-color: #8b4513;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            font-size: 1.2em;
+        }
+
+        .status-details {
+            flex-grow: 1;
+        }
+
+        .status-title {
+            font-weight: bold;
+            color: #555;
+        }
+
+        .status-value {
+            color: #8b4513;
+        }
+
+        .status-time {
+            font-size: 0.9em;
+            color: #777;
+        }
+
+        .afk-active {
+            background-color: rgba(139, 69, 19, 0.15);
+            border-color: #8b4513;
+            box-shadow: 0 0 0 2px rgba(139, 69, 19, 0.3);
+        }
+
+        .afk-active .status-icon {
+            background-color: #a0522d;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.1);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .btn {
+            background-color: #8b4513;
+            color: white;
+            border: none;
+            padding: 12px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1em;
+            width: 100%;
+            -webkit-appearance: none;
+            text-align: center;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(139, 69, 19, 0.3);
+        }
+
+        .btn:hover,
+        .btn:active {
+            background-color: #a0522d;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(139, 69, 19, 0.4);
+        }
+
+        .btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .logs {
+            height: 230px;
+            overflow-y: auto;
+            background-color: #f9f9f9;
+            padding: 12px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            font-size: 0.9em;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .log-entry {
+            margin-bottom: 8px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #eee;
+            position: relative;
+            padding-left: 10px;
+        }
+
+        .log-entry:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        .log-entry:before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 4px;
+            height: 70%;
+            background-color: #8b4513;
+            border-radius: 2px;
+        }
+
+        .log-entry.system {
+            color: #888;
+            font-style: italic;
+            font-size: 0.9em;
+        }
+
+        .log-entry.system:before {
+            background-color: #888;
+        }
+
+        .time {
+            float: right;
+            color: #999;
+            font-size: 0.8em;
+        }
+
+        /* 标签页样式 */
+        .tab-container {
+            display: flex;
+            flex-direction: column;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .tab-nav {
+            display: flex;
+            background-color: #f5f5f5;
+            border-bottom: 1px solid #ddd;
+            border-radius: 5px 5px 0 0;
+        }
+
+        .tab {
+            padding: 12px 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            background-color: #f5f5f5;
+            color: #666;
+            font-weight: bold;
+            text-align: center;
+            flex-grow: 1;
+            border-right: 1px solid #ddd;
+        }
+
+        .tab:last-child {
+            border-right: none;
+        }
+
+        .tab:hover {
+            background-color: #e9e9e9;
+        }
+
+        .tab.active {
+            background-color: #fff;
+            color: #8b4513;
+            border-bottom: 3px solid #8b4513;
+        }
+
+        .tab-content {
+            display: none;
+            background-color: #fff;
+            padding: 15px;
+            border-radius: 0 0 5px 5px;
+            border: 1px solid #ddd;
+            border-top: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .challenges {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .challenge {
+            background-color: #f9f9f9;
+            padding: 12px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            transition: all 0.3s;
+        }
+
+        .challenge:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .challenge-name {
+            font-weight: bold;
+            color: #555;
+        }
+
+        .challenge-desc {
+            font-size: 0.85em;
+            color: #777;
+            margin-top: 3px;
+        }
+
+        .challenge-progress {
+            margin-top: 8px;
+            height: 8px;
+            background-color: #eee;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .challenge-progress-bar {
+            height: 100%;
+            background-color: #8b4513;
+            width: 0%;
+            transition: width 0.5s;
+        }
+
+        .event {
+            background-color: #fff8e1;
+            border-left: 4px solid #ffd54f;
+            padding: 15px;
+            margin-top: 10px;
+            border-radius: 5px;
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 400px;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .event-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            display: none;
+        }
+
+        #event-options {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 15px;
+        }
+
+        #event-options .btn {
+            margin-top: 0;
+        }
+
+        @media (max-width: 700px) {
+            .afk-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 5px;
+            }
+
+            .container {
+                padding: 10px;
+                border-radius: 8px;
+                gap: 10px;
+            }
+
+            h1 {
+                font-size: 1.5em;
+            }
+
+            h2 {
+                font-size: 1.2em;
+            }
+
+            .tab {
+                padding: 10px 8px;
+                font-size: 0.9em;
+            }
+
+            .activity {
+                min-height: 70px;
+                padding: 10px;
+            }
+
+            .activity-name {
+                font-size: 0.9em;
+            }
+
+            .activity-desc {
+                font-size: 0.8em;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .activities {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .btn {
+                padding: 12px 10px;
+                font-size: 0.95em;
+            }
+
+            .logs {
+                height: 180px;
+            }
+
+            .log-entry {
+                font-size: 0.9em;
+            }
+
+            .event {
+                width: 95%;
+                padding: 12px;
+            }
+        }
+
+        @media (max-width: 320px) {
+
+            .stats-grid,
+            .activities {
+                grid-template-columns: 1fr;
+            }
+
+            .activity {
+                min-height: auto;
+            }
+        }
+
+        /* 自动保存提示样式 */
+        .save-notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: rgba(92, 184, 92, 0.9);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            z-index: 9999;
+            animation: fadeInOut 2s ease-in-out;
+        }
+
+        @keyframes fadeInOut {
+            0% {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            20% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+
+            80% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+
+            100% {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+        }
+
+        /* 添加深色模式支持 */
+        @media (prefers-color-scheme: dark) {
+            body {
+                color: #f0f0f0;
+            }
+
+            .container {
+                background-color: rgba(40, 40, 40, 0.9);
+                color: #f0f0f0;
+            }
+        }
+
+        /* 添加响应式设计增强 */
+        @media (max-width: 600px) {
+            .container {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="event-overlay" id="event-overlay"></div>
+
+    <div class="container">
+        <header>
+            <h1>道士修炼挂机模拟器</h1>
+            <p>体验道士的修炼之旅，感悟天地自然</p>
+            <div style="margin-top: 10px; display: flex; justify-content: space-between; align-items: center;">
+                <button class="btn" id="reset-game"
+                    style="width: auto; padding: 5px 10px; background-color: #d9534f;">重置游戏</button>
+                <div class="game-settings">
+                    <button class="btn" id="toggle-settings"
+                        style="width: auto; padding: 5px 10px; background-color: #5bc0de;">设置</button>
+                    <div id="settings-panel"
+                        style="display: none; position: absolute; right: 15px; background: white; border: 1px solid #ddd; border-radius: 5px; padding: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); z-index: 100; width: 200px;">
+                        <div style="margin-bottom: 10px;">
+                            <label style="display: flex; align-items: center; cursor: pointer;">
+                                <input type="checkbox" id="sound-toggle" style="margin-right: 8px;">
+                                <span>启用音效</span>
+                            </label>
+                        </div>
+                        <div style="margin-bottom: 10px;">
+                            <label style="display: flex; align-items: center; cursor: pointer;">
+                                <input type="checkbox" id="auto-save-toggle" style="margin-right: 8px;" checked>
+                                <span>自动保存</span>
+                            </label>
+                        </div>
+                        <div style="margin-bottom: 10px;">
+                            <label style="display: block; margin-bottom: 5px;">自动保存频率（分钟）</label>
+                            <select id="auto-save-interval"
+                                style="width: 100%; padding: 5px; border-radius: 3px; border: 1px solid #ddd;">
+                                <option value="1">1分钟</option>
+                                <option value="3">3分钟</option>
+                                <option value="5">5分钟</option>
+                                <option value="10">10分钟</option>
+                            </select>
+                        </div>
+                        <div style="margin-top: 15px; border-top: 1px solid #eee; padding-top: 10px;">
+                            <button class="btn" id="clear-cache"
+                                style="width: 100%; padding: 5px; background-color: #f0ad4e; margin-bottom: 5px;">清理缓存</button>
+                            <button class="btn" id="export-save"
+                                style="width: 100%; padding: 5px; background-color: #5cb85c; margin-bottom: 5px;">导出存档</button>
+                            <button class="btn" id="import-save"
+                                style="width: 100%; padding: 5px; background-color: #5bc0de; margin-bottom: 5px;">导入存档</button>
+                            <input type="file" id="save-file-input" style="display:none" accept=".json">
+                        </div>
+                        <!-- 移除存档槽位功能 -->
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="section">
+            <div class="section-header">
+                <h2>道长信息</h2>
+            </div>
+            <div class="section-content">
+                <div class="stats-grid">
+                    <div class="stat">
+                        <span class="stat-name">道号</span>
+                        <span class="stat-value" id="name">清虚子</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-name">境界</span>
+                        <span class="stat-value" id="level">初入道门</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-name">修为</span>
+                        <span class="stat-value"><span id="cultivation">0</span></span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-name">精神力</span>
+                        <span class="stat-value"><span id="spirit">10</span>/100</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-name">体力</span>
+                        <span class="stat-value"><span id="energy">100</span>/100</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-name">悟性</span>
+                        <span class="stat-value" id="enlightenment">1</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-name">福缘</span>
+                        <span class="stat-value" id="luck">1</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-name">道法</span>
+                        <span class="stat-value" id="taoism">1</span>
+                    </div>
+                </div>
+                <!-- 移除了原来位置的重置游戏按钮 -->
+            </div>
+        </div>
+
+        <!-- 标签页系统 -->
+        <div class="section">
+            <div class="tab-container">
+                <div class="tab-nav">
+                    <div class="tab active" data-tab="cultivation">当前修炼</div>
+                    <div class="tab" data-tab="challenges">挂机挑战</div>
+                    <div class="tab" data-tab="inventory">道具仓库</div>
+                </div>
+
+                <div class="tab-content active" id="cultivation-tab">
+                    <div class="section-content">
+                        <div class="activities">
+                            <div class="activity" data-activity="meditation">
+                                <div class="activity-name">盘坐冥想</div>
+                                <div class="activity-desc">静坐冥想，提升精神力和修为</div>
+                            </div>
+                            <div class="activity" data-activity="reading">
+                                <div class="activity-name">研读道经</div>
+                                <div class="activity-desc">阅读古籍，提升悟性和道法</div>
+                            </div>
+                            <div class="activity" data-activity="breathing">
+                                <div class="activity-name">吐纳法</div>
+                                <div class="activity-desc">修炼呼吸法门，恢复体力和精神力</div>
+                            </div>
+                            <div class="activity" data-activity="tea">
+                                <div class="activity-name">品茗悟道</div>
+                                <div class="activity-desc">品茶静思，提升悟性和福缘</div>
+                            </div>
+                            <div class="activity" data-activity="talisman">
+                                <div class="activity-name">炼制符箓</div>
+                                <div class="activity-desc">绘制道符，提升道法和修为</div>
+                            </div>
+                            <div class="activity" data-activity="herbs">
+                                <div class="activity-name">采集药草</div>
+                                <div class="activity-desc">山中采药，提升体力和福缘</div>
+                            </div>
+                            <div class="activity" data-activity="teaching" data-requirement="taoism:5">
+                                <div class="activity-name">授徒讲道</div>
+                                <div class="activity-desc">传道授业，获得灵石和提升道法</div>
+                            </div>
+                            <div class="activity" data-activity="alchemy"
+                                data-requirement="cultivation:200,enlightenment:3">
+                                <div class="activity-name">炼丹修炼</div>
+                                <div class="activity-desc">炼制丹药，提升修为和悟性</div>
+                            </div>
+                            <div class="activity" data-activity="swordsmanship" data-requirement="energy:120">
+                                <div class="activity-name">剑术修炼</div>
+                                <div class="activity-desc">修炼剑法，提升体力上限</div>
+                            </div>
+                            <div class="activity" data-activity="waterfall" data-requirement="level:修行小成">
+                                <div class="activity-name">瀑布冥想</div>
+                                <div class="activity-desc">在瀑布下静修，大幅提升精神力</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="challenges-tab">
+                    <div class="section-content">
+                        <div class="challenges" id="challenges-container">
+                            <div class="challenge">
+                                <div class="challenge-name">初入道门</div>
+                                <div class="challenge-desc">累积修炼100点修为</div>
+                                <div class="challenge-progress">
+                                    <div class="challenge-progress-bar" id="challenge-1" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            <div class="challenge">
+                                <div class="challenge-name">小有所成</div>
+                                <div class="challenge-desc">悟性达到5点</div>
+                                <div class="challenge-progress">
+                                    <div class="challenge-progress-bar" id="challenge-2" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            <div class="challenge">
+                                <div class="challenge-name">得道高人</div>
+                                <div class="challenge-desc">道法达到10点</div>
+                                <div class="challenge-progress">
+                                    <div class="challenge-progress-bar" id="challenge-3" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            <div class="challenge">
+                                <div class="challenge-name">体魄强健</div>
+                                <div class="challenge-desc">体力上限达到150点</div>
+                                <div class="challenge-progress">
+                                    <div class="challenge-progress-bar" id="challenge-4" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            <div class="challenge">
+                                <div class="challenge-name">精神饱满</div>
+                                <div class="challenge-desc">精神力上限达到150点</div>
+                                <div class="challenge-progress">
+                                    <div class="challenge-progress-bar" id="challenge-5" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            <div class="challenge">
+                                <div class="challenge-name">广积福缘</div>
+                                <div class="challenge-desc">福缘达到10点</div>
+                                <div class="challenge-progress">
+                                    <div class="challenge-progress-bar" id="challenge-6" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            <div class="challenge">
+                                <div class="challenge-name">道行精深</div>
+                                <div class="challenge-desc">达到筑基期境界</div>
+                                <div class="challenge-progress">
+                                    <div class="challenge-progress-bar" id="challenge-7" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            <div class="challenge">
+                                <div class="challenge-name">丹药大师</div>
+                                <div class="challenge-desc">炼制10颗丹药</div>
+                                <div class="challenge-progress">
+                                    <div class="challenge-progress-bar" id="challenge-8" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            <div class="challenge">
+                                <div class="challenge-name">符箓宗师</div>
+                                <div class="challenge-desc">制作20张灵符</div>
+                                <div class="challenge-progress">
+                                    <div class="challenge-progress-bar" id="challenge-9" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="inventory-tab">
+                    <div class="section-content">
+                        <div class="stats-grid">
+                            <div class="stat">
+                                <span class="stat-name">药材</span>
+                                <span class="stat-value" id="herbs-count">0</span>
+                            </div>
+                            <div class="stat">
+                                <span class="stat-name">灵符</span>
+                                <span class="stat-value" id="talismans-count">0</span>
+                            </div>
+                            <div class="stat">
+                                <span class="stat-name">丹药</span>
+                                <span class="stat-value" id="potions-count">0</span>
+                            </div>
+                            <div class="stat">
+                                <span class="stat-name">灵石</span>
+                                <span class="stat-value" id="stones-count">0</span>
+                            </div>
+                        </div>
+                        <div style="margin-top:15px">
+                            <button class="btn" id="use-potion" onclick="usePotion()">服用丹药</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 挂机状态和修炼记录 -->
+        <div class="afk-container">
+            <div class="section">
+                <div class="section-header">
+                    <h2>挂机状态</h2>
+                </div>
+                <div class="section-content status-section">
+                    <div class="current-status">
+                        <div class="status-icon">⚡</div>
+                        <div class="status-details">
+                            <div class="status-title">当前状态</div>
+                            <div class="status-value" id="current-activity">闲散</div>
+                        </div>
+                    </div>
+
+                    <div class="current-status">
+                        <div class="status-icon">⏱️</div>
+                        <div class="status-details">
+                            <div class="status-title">修炼时间</div>
+                            <div class="status-value"><span id="time-passed">0</span> 分钟</div>
+                        </div>
+                    </div>
+
+                    <div class="current-status" id="afk-status">
+                        <div class="status-icon">🔄</div>
+                        <div class="status-details">
+                            <div class="status-title">挂机状态</div>
+                            <div class="status-value">未开始</div>
+                        </div>
+                    </div>
+
+                    <button class="btn" id="toggle-afk">开始挂机修炼</button>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-header">
+                    <h2>修炼记录</h2>
+                </div>
+                <div class="section-content">
+                    <div class="logs" id="log-container">
+                        <div class="log-entry">
+                            开始了你的修道之旅...
+                            <span class="time">0分钟</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="event" id="random-event">
+            <h3 id="event-title">随机事件</h3>
+            <p id="event-desc">事件描述</p>
+            <div id="event-options"></div>
+        </div>
+    </div>
+
+    <div style="position: fixed; right: 2%; top: 20px;">
+        <div onclick="gotoPage('https://moyugame965.github.io/GameList/')"
+            style="margin: 10px 0; line-height:24px;width:50px; height: 24px;border: 1px solid #e6d5c3; background-color: #c7b299; color: #ffffff; text-align: center;border-radius: 5px;cursor: pointer;font-size: 15px;">
+            更多</div>
+        <div onclick="gotoPage('https://moyugame965.github.io/Shopping/baodan.html')"
+            style="margin: 10px 0;line-height:24px;width:50px;height: 24px;border: 1px solid #e6d5c3; background-color: #c7b299; color: #ffffff; text-align: center;border-radius: 5px;cursor: pointer;font-size: 15px;">
+            商店</div>
+        <div onclick="gotoPage('https://moyugame965.github.io/Coupon/')"
+            style="margin: 10px 0;line-height:24px;width:50px;height: 24px;border: 1px solid #e6d5c3; background-color: #c7b299; color: #ffffff; text-align: center;border-radius: 5px;cursor: pointer;font-size: 15px;">
+            外卖</div>
+    </div>
+
+    <script>
+        // 游戏状态
+        const gameState = {
+            stats: {
+                name: "清虚子",
+                level: "初入道门",
+                cultivation: 0,
+                spirit: 10,
+                energy: 100,
+                enlightenment: 1,
+                luck: 1,
+                taoism: 1,
+                maxSpirit: 100,
+                maxEnergy: 100
+            },
+            currentActivity: null,
+            afk: false,
+            timeElapsed: 0,
+            eventChance: 0.1,
+            events: [
+                {
+                    title: "高人指点",
+                    desc: "一位白发道长路过，为你指点迷津。",
+                    options: [
+                        { text: "恭敬请教", effect: () => { addStat('enlightenment', 1); addStat('cultivation', 10); } },
+                        { text: "婉言谢绝", effect: () => { addStat('luck', 1); } }
+                    ]
+                },
+                {
+                    title: "灵药出世",
+                    desc: "你发现一株千年灵芝在山洞中生长。",
+                    options: [
+                        { text: "采摘服用", effect: () => { addStat('energy', 50); addStat('spirit', 20); } },
+                        { text: "留它生长", effect: () => { addStat('luck', 2); } }
+                    ]
+                },
+                {
+                    title: "天降异象",
+                    desc: "天空中出现紫气东来的祥瑞之兆。",
+                    options: [
+                        { text: "静心参悟", effect: () => { addStat('cultivation', 20); addStat('enlightenment', 1); } },
+                        { text: "默默记下", effect: () => { addStat('taoism', 1); } }
+                    ]
+                },
+                {
+                    title: "古籍密藏",
+                    desc: "你在山洞中发现了一部失传已久的道家秘籍。",
+                    options: [
+                        { text: "细心研读", effect: () => { addStat('taoism', 2); addStat('enlightenment', 1); } },
+                        { text: "带回道观", effect: () => { addStat('luck', 1); addStat('cultivation', 15); } }
+                    ]
+                },
+                {
+                    title: "神秘访客",
+                    desc: "一位自称游方道人的访客向你请教道法。",
+                    options: [
+                        { text: "倾囊相授", effect: () => { addStat('luck', 2); } },
+                        { text: "谨慎交流", effect: () => { addStat('taoism', 1); addStat('spirit', 10); } }
+                    ]
+                },
+                {
+                    title: "山林迷途",
+                    desc: "在深山中采药，你不慎迷失了方向。",
+                    options: [
+                        { text: "冷静分析", effect: () => { addStat('enlightenment', 1); gameState.inventory.herbs = (gameState.inventory.herbs || 0) + 2; addLog("找到出路的同时，你还发现了珍贵药材！"); } },
+                        { text: "道法追踪", effect: () => { addStat('taoism', 1); addStat('energy', -10); } }
+                    ]
+                },
+                {
+                    title: "凡尘历练",
+                    desc: "一位村民请求你帮助治疗他生病的孩子。",
+                    options: [
+                        {
+                            text: "施展道法", effect: () => {
+                                if (gameState.stats.taoism >= 5) {
+                                    addStat('cultivation', 30);
+                                    addLog("你成功治愈了孩子，村民感激不尽！", "achievement");
+                                } else {
+                                    addStat('spirit', -30);
+                                    addLog("你的道法不足，消耗了大量精神力...", "error");
+                                }
+                            }
+                        },
+                        {
+                            text: "赠送丹药", effect: () => {
+                                if (gameState.inventory.potions && gameState.inventory.potions > 0) {
+                                    gameState.inventory.potions--;
+                                    addStat('luck', 3);
+                                    updateInventory();
+                                    addLog("你的丹药治好了孩子，积累了福缘！", "achievement");
+                                } else {
+                                    addStat('luck', -1);
+                                    addLog("你没有丹药可以给予，只能遗憾离开...", "error");
+                                }
+                            }
+                        }
+                    ]
+                },
+                {
+                    title: "雷劫考验",
+                    desc: "修为提升引来天雷，这是一次突破的机会。",
+                    options: [
+                        {
+                            text: "迎接雷劫", effect: () => {
+                                const success = Math.random() < (gameState.stats.spirit / gameState.stats.maxSpirit);
+                                if (success) {
+                                    addStat('cultivation', 50);
+                                    addStat('maxSpirit', 10);
+                                    addStat('maxEnergy', 10);
+                                    addLog("你成功渡过雷劫，修为大进！", "achievement");
+                                } else {
+                                    addStat('energy', -50);
+                                    addStat('spirit', -50);
+                                    addLog("雷劫威力太强，你受了重伤...", "error");
+                                }
+                            }
+                        },
+                        { text: "避开锋芒", effect: () => { addStat('energy', -20); } }
+                    ]
+                },
+                {
+                    title: "仙人赐宝",
+                    desc: "一位隐世仙人被你的修行所感动，想要赐予你宝物。",
+                    options: [
+                        { text: "请教道法", effect: () => { addStat('taoism', 3); addStat('enlightenment', 2); } },
+                        {
+                            text: "请求法宝", effect: () => {
+                                gameState.inventory.talismans = (gameState.inventory.talismans || 0) + 3;
+                                updateInventory();
+                                addLog("获得了三张强大的灵符！", "achievement");
+                            }
+                        }
+                    ]
+                },
+                {
+                    title: "心魔考验",
+                    desc: "修行到一定阶段，内心的心魔开始显现。",
+                    options: [
+                        {
+                            text: "正面对抗", effect: () => {
+                                if (gameState.stats.enlightenment >= 5) {
+                                    addStat('enlightenment', 3);
+                                    addStat('cultivation', 30);
+                                    addLog("你战胜了心魔，悟性大增！", "achievement");
+                                } else {
+                                    addStat('spirit', -40);
+                                    addLog("心魔太强，你精神受创...", "error");
+                                }
+                            }
+                        },
+                        { text: "顺其自然", effect: () => { addStat('spirit', -10); addStat('luck', 1); } }
+                    ]
+                },
+                // 新增事件开始
+                {
+                    title: "云游道人",
+                    desc: "一位云游道人来访，表示可以传授你秘法或赠送你药材。",
+                    options: [
+                        {
+                            text: "学习秘法", effect: () => {
+                                addStat('taoism', 2);
+                                addStat('cultivation', 15);
+                                addLog("你学会了一种全新的修炼秘法！", "achievement");
+                            }
+                        },
+                        {
+                            text: "接受药材", effect: () => {
+                                gameState.inventory.herbs = (gameState.inventory.herbs || 0) + 5;
+                                updateInventory();
+                                addLog("获得了5份珍贵药材！");
+                            }
+                        }
+                    ]
+                },
+                {
+                    title: "古洞奇遇",
+                    desc: "你在山中发现一个发光的古洞，里面传来奇异的能量波动。",
+                    options: [
+                        {
+                            text: "深入探索", effect: () => {
+                                if (Math.random() < 0.7) {
+                                    addStat('cultivation', 30);
+                                    addStat('spirit', 30);
+                                    addLog("你在古洞中感受到浓郁的灵气，修为大进！", "achievement");
+                                } else {
+                                    addStat('energy', -30);
+                                    addLog("古洞中的阵法攻击了你，损失了不少体力...", "error");
+                                }
+                            }
+                        },
+                        {
+                            text: "谨慎观察", effect: () => {
+                                addStat('enlightenment', 1);
+                                gameState.inventory.stones = (gameState.inventory.stones || 0) + 2;
+                                updateInventory();
+                                addLog("你从洞口收集到了几块闪烁的灵石。");
+                            }
+                        }
+                    ]
+                },
+                {
+                    title: "飞剑传书",
+                    desc: "一把微型飞剑带着书信飞到你面前，是远方的道友邀请你共同修炼。",
+                    options: [
+                        {
+                            text: "欣然前往", effect: () => {
+                                if (gameState.stats.level === "初入道门") {
+                                    addStat('cultivation', 10);
+                                    addLog("与道友切磋，获益良多。");
+                                } else {
+                                    addStat('taoism', 2);
+                                    addStat('enlightenment', 1);
+                                    addLog("你们交换了修炼心得，互相启发。", "achievement");
+                                }
+                            }
+                        },
+                        {
+                            text: "婉拒邀请", effect: () => {
+                                addStat('spirit', 15);
+                                addLog("你专注于自己的修行，精神更加集中。");
+                            }
+                        }
+                    ]
+                },
+                {
+                    title: "灵兽现身",
+                    desc: "一只浑身散发灵光的白鹿在你修炼时现身，静静地注视着你。",
+                    options: [
+                        {
+                            text: "尝试沟通", effect: () => {
+                                if (gameState.stats.spirit >= 50) {
+                                    addStat('enlightenment', 2);
+                                    addStat('luck', 2);
+                                    addLog("你与灵兽建立了心灵感应，获得了它的祝福！", "achievement");
+                                } else {
+                                    addLog("你的精神力不足，无法与灵兽沟通。");
+                                }
+                            }
+                        },
+                        {
+                            text: "安静观察", effect: () => {
+                                addStat('spirit', 10);
+                                addLog("灵兽离去了，但它的出现让你感到平静。");
+                            }
+                        }
+                    ]
+                },
+                {
+                    title: "灵雨降临",
+                    desc: "天空突然下起了灵气充盈的雨，这是难得的修炼良机。",
+                    options: [
+                        {
+                            text: "雨中打坐", effect: () => {
+                                addStat('cultivation', 25);
+                                addStat('spirit', 25);
+                                addLog("灵雨洗涤身心，你的修为大幅提升！", "achievement");
+                            }
+                        },
+                        {
+                            text: "收集雨水", effect: () => {
+                                gameState.inventory.potions = (gameState.inventory.potions || 0) + 1;
+                                updateInventory();
+                                addLog("你收集了灵雨炼制成丹药，获得了1颗丹药！");
+                            }
+                        }
+                    ]
+                },
+                {
+                    title: "山神试炼",
+                    desc: "当地山神显灵，想要考验你的道心和实力。",
+                    options: [
+                        {
+                            text: "接受试炼", effect: () => {
+                                const successRate = (gameState.stats.taoism * 0.1) + (gameState.stats.cultivation / 100) + (gameState.stats.luck * 0.05);
+                                if (Math.random() < successRate) {
+                                    addStat('taoism', 3);
+                                    addStat('cultivation', 40);
+                                    addLog("你通过了山神的试炼，获得了山神赐福！", "achievement");
+                                } else {
+                                    addStat('energy', -40);
+                                    addLog("试炼失败，你消耗了大量体力...", "error");
+                                }
+                            }
+                        },
+                        {
+                            text: "谦虚致歉", effect: () => {
+                                addStat('luck', 1);
+                                addLog("山神欣赏你的谦逊态度，离开前给了你一丝福缘。");
+                            }
+                        }
+                    ]
+                },
+                {
+                    title: "流星坠落",
+                    desc: "一颗流星坠落在附近的山谷中，散发着奇异的能量。",
+                    options: [
+                        {
+                            text: "寻找陨石", effect: () => {
+                                if (Math.random() < 0.6) {
+                                    gameState.inventory.stones = (gameState.inventory.stones || 0) + 5;
+                                    updateInventory();
+                                    addLog("你找到了几块蕴含强大能量的陨石！", "achievement");
+                                } else {
+                                    addStat('energy', -20);
+                                    addLog("你搜寻了很久但一无所获，徒劳消耗了体力。", "error");
+                                }
+                            }
+                        },
+                        {
+                            text: "远程感应", effect: () => {
+                                addStat('spirit', 15);
+                                addStat('enlightenment', 0.5);
+                                addLog("你感应到流星的能量，提升了精神力。");
+                            }
+                        }
+                    ]
+                },
+                {
+                    title: "百草争鸣",
+                    desc: "你经过的草地上，所有植物突然散发灵光，开始生长，这是难得的天地异象。",
+                    options: [
+                        {
+                            text: "汲取灵气", effect: () => {
+                                addStat('cultivation', 20);
+                                addStat('spirit', 20);
+                                addLog("你吸收了大量植物精华，修为大增！");
+                            }
+                        },
+                        {
+                            text: "采集仙草", effect: () => {
+                                gameState.inventory.herbs = (gameState.inventory.herbs || 0) + 3;
+                                addStat('luck', 1);
+                                updateInventory();
+                                addLog("你采集到了几株珍贵的仙草！");
+                            }
+                        }
+                    ]
+                },
+                {
+                    title: "幻境试炼",
+                    desc: "你不知不觉走入了一个幻境，这似乎是一场针对心性的考验。",
+                    options: [
+                        {
+                            text: "参悟幻象", effect: () => {
+                                if (gameState.stats.enlightenment >= 4) {
+                                    addStat('enlightenment', 2);
+                                    addStat('cultivation', 30);
+                                    addLog("你看破幻象，获得了深刻的领悟！", "achievement");
+                                } else {
+                                    addStat('spirit', -20);
+                                    addLog("幻境太过复杂，耗费了你不少精神力...", "error");
+                                }
+                            }
+                        },
+                        {
+                            text: "打破幻境", effect: () => {
+                                addStat('taoism', 1);
+                                addStat('energy', -10);
+                                addLog("你用道法破除了幻境，获得了一些感悟。");
+                            }
+                        }
+                    ]
+                }
+                // 新增事件结束
+            ],
+            challenges: [
+                { name: "初入道门", desc: "累积修炼100点修为", target: 100, stat: "cultivation", completed: false },
+                { name: "小有所成", desc: "悟性达到5点", target: 5, stat: "enlightenment", completed: false },
+                { name: "得道高人", desc: "道法达到10点", target: 10, stat: "taoism", completed: false },
+                { name: "体魄强健", desc: "体力上限达到150点", target: 150, stat: "maxEnergy", completed: false },
+                { name: "精神饱满", desc: "精神力上限达到150点", target: 150, stat: "maxSpirit", completed: false },
+                { name: "广积福缘", desc: "福缘达到10点", target: 10, stat: "luck", completed: false },
+                { name: "道行精深", desc: "达到筑基期境界", target: "筑基期", stat: "level", completed: false },
+                { name: "丹药大师", desc: "炼制10颗丹药", target: 10, stat: "potions", customCheck: true, completed: false },
+                { name: "符箓宗师", desc: "制作20张灵符", target: 20, stat: "talismans", customCheck: true, completed: false }
+            ],
+            activities: {
+                meditation: {
+                    name: "盘坐冥想",
+                    effects: {
+                        cultivation: 1,
+                        spirit: 2,
+                        energy: -1
+                    }
+                },
+                reading: {
+                    name: "研读道经",
+                    effects: {
+                        enlightenment: 0.1,
+                        taoism: 0.1,
+                        energy: -2,
+                        spirit: -1
+                    }
+                },
+                breathing: {
+                    name: "吐纳法",
+                    effects: {
+                        energy: 5,
+                        spirit: 3
+                    }
+                },
+                tea: {
+                    name: "品茗悟道",
+                    effects: {
+                        enlightenment: 0.05,
+                        luck: 0.05,
+                        spirit: 1
+                    }
+                },
+                talisman: {
+                    name: "炼制符箓",
+                    effects: {
+                        taoism: 0.2,
+                        cultivation: 0.5,
+                        energy: -3,
+                        spirit: -2
+                    }
+                },
+                herbs: {
+                    name: "采集药草",
+                    effects: {
+                        energy: -2,
+                        luck: 0.1
+                    }
+                },
+                teaching: {
+                    name: "授徒讲道",
+                    effects: {
+                        taoism: 0.3,
+                        cultivation: 0.5,
+                        energy: -2,
+                        spirit: -3
+                    }
+                },
+                alchemy: {
+                    name: "炼丹修炼",
+                    effects: {
+                        cultivation: 2,
+                        enlightenment: 0.2,
+                        energy: -4,
+                        spirit: -3
+                    }
+                },
+                swordsmanship: {
+                    name: "剑术修炼",
+                    effects: {
+                        cultivation: 1.5,
+                        energy: -5
+                    },
+                    special: "maxEnergy" // 特殊效果：增加体力上限
+                },
+                waterfall: {
+                    name: "瀑布冥想",
+                    effects: {
+                        spirit: 5,
+                        cultivation: 2,
+                        energy: -3
+                    },
+                    special: "maxSpirit" // 特殊效果：增加精神力上限
+                }
+            },
+            levels: [
+                { name: "初入道门", req: 0 },
+                { name: "修行小成", req: 100 },
+                { name: "筑基期", req: 500 },
+                { name: "凝神期", req: 1000 },
+                { name: "金丹期", req: 3000 },
+                { name: "元婴期", req: 10000 },
+                { name: "化神期", req: 30000 },
+                { name: "渡劫期", req: 100000 },
+                { name: "得道成仙", req: 500000 }
+            ]
+        };
+
+        // DOM元素
+        const elements = {
+            stats: {
+                name: document.getElementById('name'),
+                level: document.getElementById('level'),
+                cultivation: document.getElementById('cultivation'),
+                spirit: document.getElementById('spirit'),
+                energy: document.getElementById('energy'),
+                enlightenment: document.getElementById('enlightenment'),
+                luck: document.getElementById('luck'),
+                taoism: document.getElementById('taoism')
+            },
+            currentActivity: document.getElementById('current-activity'),
+            timePassed: document.getElementById('time-passed'),
+            toggleAfk: document.getElementById('toggle-afk'),
+            logContainer: document.getElementById('log-container'),
+            activities: document.querySelectorAll('.activity'),
+            randomEvent: document.getElementById('random-event'),
+            eventOverlay: document.getElementById('event-overlay'),
+            eventTitle: document.getElementById('event-title'),
+            eventDesc: document.getElementById('event-desc'),
+            eventOptions: document.getElementById('event-options'),
+            challenges: {
+                1: document.getElementById('challenge-1'),
+                2: document.getElementById('challenge-2'),
+                3: document.getElementById('challenge-3'),
+                4: document.getElementById('challenge-4'),
+                5: document.getElementById('challenge-5'),
+                6: document.getElementById('challenge-6'),
+                7: document.getElementById('challenge-7'),
+                8: document.getElementById('challenge-8'),
+                9: document.getElementById('challenge-9')
+            }
+        };
+
+        // 初始化游戏
+        function initGame() {
+            // 初始化库存
+            gameState.inventory = gameState.inventory || {
+                herbs: 0,
+                talismans: 0,
+                potions: 0,
+                stones: 0
+            };
+
+            // 初始化游戏设置
+            gameState.settings = gameState.settings || {
+                soundEnabled: false,
+                autoSave: true,
+                autoSaveInterval: 1 // 默认1分钟自动保存一次
+                // 已移除当前存档槽位设置
+            };
+
+            // 应用设置
+            document.getElementById('sound-toggle').checked = gameState.settings.soundEnabled || false;
+            document.getElementById('auto-save-toggle').checked = gameState.settings.autoSave !== false;
+            gameState.soundEnabled = gameState.settings.soundEnabled || false;
+
+            // 设置自动保存频率选择器
+            const intervalSelect = document.getElementById('auto-save-interval');
+            intervalSelect.value = gameState.settings.autoSaveInterval || 1;
+
+            // 绑定设置按钮事件
+            document.getElementById('toggle-settings').addEventListener('click', function () {
+                const panel = document.getElementById('settings-panel');
+                panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+            });
+
+            // 绑定设置选项事件
+            document.getElementById('sound-toggle').addEventListener('change', function () {
+                gameState.soundEnabled = this.checked;
+                gameState.settings.soundEnabled = this.checked;
+                saveSettings();
+            });
+
+            document.getElementById('auto-save-toggle').addEventListener('change', function () {
+                gameState.settings.autoSave = this.checked;
+                saveSettings();
+
+                // 反馈到界面
+                if (this.checked) {
+                    addLog("已开启自动保存功能", "system");
+                } else {
+                    addLog("已关闭自动保存功能", "system");
+                }
+            });
+
+            document.getElementById('auto-save-interval').addEventListener('change', function () {
+                gameState.settings.autoSaveInterval = parseInt(this.value);
+                saveSettings();
+                addLog(`自动保存频率已设置为${this.value}分钟一次`, "system");
+            });
+
+            document.getElementById('clear-cache').addEventListener('click', function () {
+                if (confirm('确定要清除浏览器缓存吗？这不会删除你的存档，但会清理临时文件。')) {
+                    // 尝试清理一些缓存
+                    try {
+                        localStorage.removeItem('daoshiCache');
+                        if (window.caches) {
+                            caches.keys().then(names => {
+                                names.forEach(name => {
+                                    if (name.includes('daoshi')) {
+                                        caches.delete(name);
+                                    }
+                                });
+                            });
+                        }
+                        alert('缓存已清理！');
+                    } catch (e) {
+                        console.error('清理缓存失败', e);
+                        alert('清理缓存失败: ' + e.message);
+                    }
+                }
+            });
+
+            document.getElementById('export-save').addEventListener('click', function () {
+                // 导出存档为JSON文件
+                try {
+                    const saveData = localStorage.getItem('daoshiGame');
+                    if (!saveData) {
+                        alert('没有可用的存档数据！');
+                        return;
+                    }
+
+                    const blob = new Blob([saveData], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `daoshi_save_${new Date().toISOString().split('T')[0]}.json`;
+                    document.body.appendChild(a);
+                    a.click();
+
+                    setTimeout(() => {
+                        document.body.removeChild(a);
+                        window.URL.revokeObjectURL(url);
+                    }, 0);
+                } catch (e) {
+                    console.error('导出存档失败', e);
+                    alert('导出存档失败: ' + e.message);
+                }
+            });
+
+            // 导入存档
+            document.getElementById('import-save').addEventListener('click', function () {
+                document.getElementById('save-file-input').click();
+            });
+
+            document.getElementById('save-file-input').addEventListener('change', function (e) {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    try {
+                        const saveData = e.target.result;
+                        // 验证JSON格式
+                        JSON.parse(saveData);
+
+                        if (confirm('确定要导入此存档吗？这将覆盖你当前的游戏进度。')) {
+                            localStorage.setItem('daoshiGame', saveData);
+                            alert('存档导入成功！游戏将刷新以加载新存档。');
+                            location.reload();
+                        }
+                    } catch (e) {
+                        console.error('导入存档失败', e);
+                        alert('导入存档失败: 文件格式无效');
+                    }
+                };
+                reader.readAsText(file);
+            });
+
+            // 移除存档槽位相关代码
+
+            // 初始化UI
+            updateAllUI();
+
+            // 初始化标签系统
+            initTabs();
+
+            // 初始化时间和季节
+            updateTimeDisplay();
+
+            // 绑定活动选择
+            document.querySelectorAll('.activity').forEach(activity => {
+                activity.addEventListener('click', () => {
+                    const activityId = activity.getAttribute('data-activity');
+                    selectActivity(activityId);
+                });
+            });
+
+            // 绑定挂机按钮
+            elements.toggleAfk.addEventListener('click', toggleAfk);
+
+            // 绑定重置游戏按钮
+            document.getElementById('reset-game').addEventListener('click', resetGame);
+
+            // 锁定需要解锁的活动
+            checkActivityUnlocks();
+
+            // 加载游戏
+            loadGame();
+
+            // 防止iOS Safari上的触摸事件问题
+            document.body.addEventListener('touchstart', function () { }, { passive: true });
+
+            // 添加欢迎日志
+            addLog(`欢迎，${gameState.stats.name}道长！开始你的修道之旅...`);
+
+            // 点击其他地方关闭设置面板
+            document.addEventListener('click', function (e) {
+                const settingsPanel = document.getElementById('settings-panel');
+                const toggleButton = document.getElementById('toggle-settings');
+
+                if (settingsPanel.style.display === 'block' &&
+                    !settingsPanel.contains(e.target) &&
+                    e.target !== toggleButton) {
+                    settingsPanel.style.display = 'none';
+                }
+            });
+        }
+
+        // 保存用户设置
+        function saveSettings() {
+            try {
+                localStorage.setItem('daoshiSettings', JSON.stringify(gameState.settings));
+            } catch (error) {
+                console.error("保存设置时出错:", error);
+            }
+        }
+
+        // 选择活动
+        function selectActivity(activityId) {
+            // 检查活动是否锁定
+            const activityElement = document.querySelector(`.activity[data-activity="${activityId}"]`);
+            if (activityElement && activityElement.classList.contains('locked')) {
+                addLog(`你尚未满足修炼${gameState.activities[activityId].name}的条件`, 'error');
+                return false;
+            }
+
+            // 如果之前有活动，先清除它的active状态
+            if (gameState.currentActivity) {
+                const oldActivity = document.querySelector(`.activity[data-activity="${gameState.currentActivity}"]`);
+                if (oldActivity) oldActivity.classList.remove('active');
+            }
+
+            gameState.currentActivity = activityId;
+
+            // 设置新活动的active状态
+            if (activityElement) {
+                activityElement.classList.add('active');
+            }
+
+            elements.currentActivity.textContent = gameState.activities[activityId].name;
+            addLog(`开始${gameState.activities[activityId].name}`);
+
+            // 选择活动后保存游戏状态
+            saveGame();
+
+            return true;
+        }
+
+        // 切换挂机状态
+        function toggleAfk() {
+            if (!gameState.currentActivity) {
+                addLog("请先选择一个修炼活动", "error");
+                return;
+            }
+
+            gameState.afk = !gameState.afk;
+
+            if (gameState.afk) {
+                elements.toggleAfk.textContent = "停止挂机修炼";
+                addLog("开始挂机修炼");
+                document.getElementById('afk-status').classList.add('afk-active');
+                // 更新挂机状态文本
+                const statusValue = document.querySelector('#afk-status .status-value');
+                if (statusValue) {
+                    statusValue.textContent = "修炼中...";
+                }
+                startAfkLoop();
+            } else {
+                elements.toggleAfk.textContent = "开始挂机修炼";
+                addLog("停止挂机修炼");
+                document.getElementById('afk-status').classList.remove('afk-active');
+                // 更新挂机状态文本
+                const statusValue = document.querySelector('#afk-status .status-value');
+                if (statusValue) {
+                    statusValue.textContent = "未开始";
+                }
+                stopAfkLoop();
+            }
+        }
+
+        // 挂机循环
+        let afkInterval;
+        function startAfkLoop() {
+            // 防止多个计时器同时运行
+            if (afkInterval) {
+                clearInterval(afkInterval);
+            }
+
+            afkInterval = setInterval(() => {
+                // 时间流逝
+                gameState.timeElapsed++;
+
+                // 更新UI中的时间显示
+                if (elements.timePassed) {
+                    elements.timePassed.textContent = gameState.timeElapsed;
+                }
+
+                // 时间系统
+                updateGameTime();
+
+                // 应用活动效果
+                if (gameState.currentActivity && gameState.activities[gameState.currentActivity]) {
+                    const activity = gameState.activities[gameState.currentActivity];
+
+                    // 季节效果修饰
+                    const seasonMultiplier = getSeasonMultiplier(gameState.currentActivity);
+
+                    for (const [stat, value] of Object.entries(activity.effects)) {
+                        // 应用季节修饰效果
+                        let modifiedValue = value * seasonMultiplier;
+
+                        // 如果是夜晚，精神力恢复获得加成
+                        if (!gameState.dayTime && stat === 'spirit' && modifiedValue > 0) {
+                            modifiedValue *= 1.5;
+                        }
+
+                        addStat(stat, modifiedValue);
+                    }
+
+                    // 处理特殊效果
+                    if (activity.special) {
+                        // 每10分钟应用一次特殊效果
+                        if (gameState.timeElapsed % 10 === 0) {
+                            if (activity.special === "maxEnergy") {
+                                // 增加最大体力
+                                gameState.stats.maxEnergy += 0.5;
+                                if (gameState.timeElapsed % 30 === 0) {
+                                    addLog("剑术修炼增强了你的体魄，体力上限提升了！");
+                                }
+                            } else if (activity.special === "maxSpirit") {
+                                // 增加最大精神力
+                                gameState.stats.maxSpirit += 0.5;
+                                if (gameState.timeElapsed % 30 === 0) {
+                                    addLog("瀑布冥想净化了你的心灵，精神力上限提升了！");
+                                }
+                            }
+                        }
+                    }
+
+                    // 随机物品获取
+                    processActivityRewards(gameState.currentActivity);
+                }
+
+                // 随机事件
+                if (Math.random() < calculateEventChance()) {
+                    triggerRandomEvent();
+                }
+
+                // 更新UI
+                updateAllUI();
+
+                // 自动保存游戏
+                if (gameState.settings && gameState.settings.autoSave !== false) {
+                    // 使用设置中的保存间隔（分钟）
+                    const saveInterval = gameState.settings.autoSaveInterval || 1;
+
+                    if (gameState.timeElapsed % (saveInterval * 60) === 0) {
+                        saveGame();
+
+                        // 显示自动保存提示
+                        const saveNotification = document.createElement('div');
+                        saveNotification.className = 'save-notification';
+                        saveNotification.textContent = '游戏已自动保存';
+                        document.body.appendChild(saveNotification);
+
+                        // 添加日志
+                        addLog("游戏已自动保存", "system");
+
+                        // 2秒后移除提示
+                        setTimeout(() => {
+                            if (saveNotification.parentNode) {
+                                saveNotification.parentNode.removeChild(saveNotification);
+                            }
+                        }, 2000);
+                    }
+                }
+
+                // 检查是否可以继续
+                if (gameState.stats.energy <= 0 || gameState.stats.spirit <= 0) {
+                    addLog("你太疲惫了，无法继续修炼", "error");
+                    gameState.afk = false;
+                    elements.toggleAfk.textContent = "开始挂机修炼";
+                    document.getElementById('afk-status').classList.remove('afk-active');
+                    // 更新挂机状态文本
+                    const statusValue = document.querySelector('#afk-status .status-value');
+                    if (statusValue) {
+                        statusValue.textContent = "未开始";
+                    }
+                    clearInterval(afkInterval);
+                }
+            }, 1000);
+        }
+
+        // 更新游戏时间系统
+        function updateGameTime() {
+            gameState.time += 0.25; // 每次增加15分钟
+
+            // 日期变更
+            if (gameState.time >= 24) {
+                gameState.time = 0;
+                gameState.daysPassed++;
+                addLog(`进入第${gameState.daysPassed}天`);
+
+                // 每10天提升属性上限
+                if (gameState.daysPassed % 10 === 0) {
+                    gameState.stats.maxEnergy += 5;
+                    gameState.stats.maxSpirit += 5;
+                    addLog(`随着长期修炼，你的体力上限和精神力上限提升了！`, 'achievement');
+                }
+            }
+
+            // 日夜变化
+            const oldDayTime = gameState.dayTime;
+            gameState.dayTime = (gameState.time >= 6 && gameState.time < 18);
+
+            if (oldDayTime !== gameState.dayTime) {
+                if (gameState.dayTime) {
+                    addLog('天亮了，万物复苏');
+                    document.body.classList.remove('night-mode');
+                } else {
+                    addLog('夜幕降临，群星闪烁');
+                    document.body.classList.add('night-mode');
+                }
+            }
+
+            // 季节变化
+            if (gameState.daysPassed % 30 === 0 && gameState.time === 0) {
+                const seasons = ['spring', 'summer', 'autumn', 'winter'];
+                const currentIndex = seasons.indexOf(gameState.season);
+                const newSeason = seasons[(currentIndex + 1) % 4];
+
+                if (newSeason !== gameState.season) {
+                    gameState.season = newSeason;
+
+                    const seasonNames = {
+                        spring: '春季',
+                        summer: '夏季',
+                        autumn: '秋季',
+                        winter: '冬季'
+                    };
+
+                    addLog(`季节变化，进入${seasonNames[gameState.season]}`);
+
+                    // 更新UI
+                    const seasonIndicator = document.getElementById('season-indicator');
+                    if (seasonIndicator) {
+                        seasonIndicator.textContent = seasonNames[gameState.season];
+                        seasonIndicator.className = `season-indicator ${gameState.season}`;
+                    }
+                }
+            }
+
+            // 更新时间显示
+            updateTimeDisplay();
+        }
+
+        // 更新时间和日夜显示
+        function updateTimeDisplay() {
+            // 更新时辰显示
+            const timeIndicator = document.getElementById('time-indicator');
+            if (timeIndicator) {
+                const chineseHours = ['子时', '丑时', '寅时', '卯时', '辰时', '巳时', '午时', '未时', '申时', '酉时', '戌时', '亥时'];
+                const hourIndex = Math.floor(gameState.time / 2) % 12;
+                timeIndicator.textContent = chineseHours[hourIndex];
+            }
+
+            // 更新天数显示
+            const daysPassed = document.getElementById('days-passed');
+            if (daysPassed) {
+                daysPassed.textContent = `第${gameState.daysPassed}天`;
+            }
+
+            // 更新日夜图标
+            const dayNightIndicator = document.getElementById('day-night-indicator');
+            if (dayNightIndicator) {
+                if (gameState.dayTime) {
+                    dayNightIndicator.textContent = '☀️';
+                    dayNightIndicator.className = 'day-night-indicator daytime';
+                } else {
+                    dayNightIndicator.textContent = '🌙';
+                    dayNightIndicator.className = 'day-night-indicator nighttime';
+                }
+            }
+        }
+
+        // 获取季节修饰效果
+        function getSeasonMultiplier(activityId) {
+            const seasonEffects = {
+                spring: {
+                    meditation: 1.2,   // 春季冥想效果更佳
+                    herbs: 1.5,        // 春季采药更高效
+                    default: 1.1       // 春季其他活动轻微提升
+                },
+                summer: {
+                    qigong: 1.3,       // 夏季气功修炼更佳
+                    talisman: 1.2,     // 夏季符箓效果更好
+                    default: 1.0       // 夏季普通效果
+                },
+                autumn: {
+                    reading: 1.3,      // 秋季读经更高效
+                    tea: 1.2,          // 秋季品茶效果更好
+                    default: 1.1       // 秋季其他活动轻微提升
+                },
+                winter: {
+                    meditation: 0.9,   // 冬季冥想效果较弱
+                    breathing: 1.3,    // 冬季吐纳效果更佳
+                    default: 0.95      // 冬季轻微降低效率
+                }
+            };
+
+            // 返回对应季节的修饰效果，如果没有特定效果则返回默认值
+            return seasonEffects[gameState.season][activityId] ||
+                seasonEffects[gameState.season].default;
+        }
+
+        // 基于各种因素计算事件触发几率
+        function calculateEventChance() {
+            let chance = gameState.eventChance;
+
+            // 福缘影响事件触发几率
+            chance += (gameState.stats.luck - 1) * 0.02;
+
+            // 夜晚事件更多
+            if (!gameState.dayTime) {
+                chance *= 1.5;
+            }
+
+            // 不同季节的事件几率
+            const seasonMultipliers = {
+                spring: 1.1,
+                summer: 0.9,
+                autumn: 1.2,
+                winter: 1.3
+            };
+
+            chance *= seasonMultipliers[gameState.season] || 1;
+
+            // 境界越高，遇到稀有事件的几率越高
+            const levelIndex = gameState.levels.findIndex(l => l.name === gameState.stats.level);
+            chance *= (1 + levelIndex * 0.05);
+
+            // 长时间没有事件会提高触发几率
+            if (gameState.lastEventTime) {
+                const minutesSinceLastEvent = (gameState.timeElapsed - gameState.lastEventTime);
+                if (minutesSinceLastEvent > 30) {
+                    // 每超过30分钟增加5%概率
+                    chance *= (1 + ((minutesSinceLastEvent - 30) / 30) * 0.05);
+                }
+            }
+
+            return Math.min(chance, 0.35); // 上限35%
+        }
+
+        // 处理活动随机奖励
+        function processActivityRewards(activityId) {
+            switch (activityId) {
+                case 'herbs':
+                    // 采药有几率获得药材
+                    if (Math.random() < 0.3) {
+                        gameState.inventory.herbs = (gameState.inventory.herbs || 0) + 1;
+                        addLog(`你采集到了一份药材！`);
+                    }
+                    break;
+                case 'talisman':
+                    // 符箓有几率获得成品符
+                    if (Math.random() < 0.2) {
+                        gameState.inventory.talismans = (gameState.inventory.talismans || 0) + 1;
+                        addLog(`你成功炼制了一张灵符！`);
+                    }
+                    break;
+                case 'teaching':
+                    // 授徒有几率获得灵石
+                    if (Math.random() < 0.4) {
+                        gameState.inventory.stones = (gameState.inventory.stones || 0) + 1;
+                        addLog(`你获得了一枚灵石！`);
+                    }
+                    break;
+                case 'alchemy':
+                    // 炼丹有几率获得丹药
+                    if (Math.random() < 0.15) {
+                        gameState.inventory.potions = (gameState.inventory.potions || 0) + 1;
+                        addLog(`你成功炼制了一颗丹药！`, 'achievement');
+                    }
+
+                    // 需要消耗药材
+                    if (gameState.inventory.herbs && gameState.inventory.herbs > 0 && gameState.timeElapsed % 5 === 0) {
+                        gameState.inventory.herbs -= 1;
+                        addLog(`炼丹消耗了一份药材`);
+                    }
+                    break;
+                case 'swordsmanship':
+                    // 剑术修炼有几率触发顿悟
+                    if (Math.random() < 0.1) {
+                        addStat('cultivation', 10);
+                        addLog(`剑术修炼中你突然顿悟，修为大增！`);
+                    }
+                    break;
+                case 'waterfall':
+                    // 瀑布冥想有几率回复全部精神力
+                    if (Math.random() < 0.05) {
+                        gameState.stats.spirit = gameState.stats.maxSpirit;
+                        addLog(`在瀑布下悟道，你的精神力完全恢复了！`, 'achievement');
+                    }
+                    break;
+            }
+
+            // 更新物品栏
+            updateInventory();
+        }
+
+        // 更新状态显示
+        function updateStats() {
+            for (const [stat, element] of Object.entries(elements.stats)) {
+                element.textContent = typeof gameState.stats[stat] === 'number' ?
+                    Math.floor(gameState.stats[stat] * 10) / 10 :
+                    gameState.stats[stat];
+            }
+        }
+
+        // 添加属性值
+        function addStat(stat, value) {
+            // 如果是负值，检查是否会导致属性低于0
+            if (value < 0 && gameState.stats[stat] + value < 0) {
+                // 将属性设为0而不是负值
+                gameState.stats[stat] = 0;
+            } else {
+                // 应用属性变化
+                gameState.stats[stat] += value;
+            }
+
+            // 特殊处理一些有上限的属性
+            if (stat === 'energy' && gameState.stats.energy > gameState.stats.maxEnergy) {
+                gameState.stats.energy = gameState.stats.maxEnergy;
+            }
+            if (stat === 'spirit' && gameState.stats.spirit > gameState.stats.maxSpirit) {
+                gameState.stats.spirit = gameState.stats.maxSpirit;
+            }
+
+            // 更新境界等级
+            checkLevelUp();
+        }
+
+        // 检查是否可以提升境界
+        function checkLevelUp() {
+            // 获取当前境界在等级数组中的索引
+            const currentLevelIndex = gameState.levels.findIndex(level => level.name === gameState.stats.level);
+
+            // 如果找到了当前境界，检查是否可以晋级
+            if (currentLevelIndex !== -1 && currentLevelIndex < gameState.levels.length - 1) {
+                const nextLevel = gameState.levels[currentLevelIndex + 1];
+
+                // 如果修为达到了下一个境界的要求
+                if (gameState.stats.cultivation >= nextLevel.req) {
+                    gameState.stats.level = nextLevel.name;
+                    addLog(`恭喜！你的境界提升到了【${nextLevel.name}】`, 'level-up');
+
+                    // 提升奖励
+                    gameState.stats.maxEnergy += 10;
+                    gameState.stats.maxSpirit += 10;
+                    gameState.stats.energy = gameState.stats.maxEnergy;
+                    gameState.stats.spirit = gameState.stats.maxSpirit;
+
+                    // 在境界提升时保存游戏状态
+                    saveGame();
+
+                    // 境界提升后重新检查活动解锁
+                    checkActivityUnlocks();
+                }
+            }
+        }
+
+        // 更新挑战进度
+        function updateChallenges() {
+            gameState.challenges.forEach((challenge, index) => {
+                // 获取当前值
+                let value;
+                let progress = 0;
+
+                if (challenge.customCheck) {
+                    // 自定义检查的挑战，例如物品挑战
+                    switch (challenge.stat) {
+                        case 'potions':
+                            value = gameState.inventory.potions || 0;
+                            progress = Math.min(Math.floor((value / challenge.target) * 100), 100);
+                            break;
+                        case 'talismans':
+                            value = gameState.inventory.talismans || 0;
+                            progress = Math.min(Math.floor((value / challenge.target) * 100), 100);
+                            break;
+                        default:
+                            value = 0;
+                            progress = 0;
+                    }
+
+                    updateChallengeProgress(index + 1, progress, challenge.completed);
+                } else if (challenge.stat === 'level') {
+                    // 特殊处理境界等级
+                    value = gameState.levels.findIndex(l => l.name === gameState.stats.level);
+                    const targetIndex = gameState.levels.findIndex(l => l.name === challenge.target);
+                    progress = targetIndex > 0 ? Math.min(Math.floor((value / targetIndex) * 100), 100) : 0;
+
+                    updateChallengeProgress(index + 1, progress, challenge.completed);
+                } else {
+                    // 普通属性
+                    value = gameState.stats[challenge.stat];
+                    progress = Math.min(Math.floor((value / challenge.target) * 100), 100);
+
+                    updateChallengeProgress(index + 1, progress, challenge.completed);
+                }
+
+                // 检查是否完成
+                if (challenge.customCheck) {
+                    // 自定义挑战完成检查
+                    switch (challenge.stat) {
+                        case 'potions':
+                            if ((gameState.inventory.potions || 0) >= challenge.target && !challenge.completed) {
+                                completeChallengeReward(challenge, index);
+                            }
+                            break;
+                        case 'talismans':
+                            if ((gameState.inventory.talismans || 0) >= challenge.target && !challenge.completed) {
+                                completeChallengeReward(challenge, index);
+                            }
+                            break;
+                    }
+                } else if (challenge.stat === 'level') {
+                    // 境界等级对比
+                    const currentLevel = gameState.levels.findIndex(l => l.name === gameState.stats.level);
+                    const targetLevel = gameState.levels.findIndex(l => l.name === challenge.target);
+
+                    if (currentLevel >= targetLevel && !challenge.completed) {
+                        completeChallengeReward(challenge, index);
+                    }
+                } else if (value >= challenge.target && !challenge.completed) {
+                    completeChallengeReward(challenge, index);
+                }
+            });
+        }
+
+        // 更新挑战进度条
+        function updateChallengeProgress(index, progress, completed) {
+            const progressBar = elements.challenges[index];
+            if (progressBar) {
+                progressBar.style.width = `${progress}%`;
+
+                // 更新挑战元素状态
+                const challengeElement = progressBar.closest('.challenge');
+                if (challengeElement) {
+                    if (completed) {
+                        challengeElement.classList.add('completed');
+                    } else {
+                        challengeElement.classList.remove('completed');
+                    }
+                }
+            }
+        }
+
+        // 完成挑战时给予奖励
+        function completeChallengeReward(challenge, index) {
+            challenge.completed = true;
+
+            // 添加奖励
+            addLog(`完成挑战：${challenge.name}`, 'achievement');
+
+            // 不同挑战给予不同奖励
+            switch (index) {
+                case 0: // 初入道门
+                    addStat('cultivation', 50);
+                    addStat('luck', 1);
+                    break;
+                case 1: // 小有所成
+                    addStat('taoism', 2);
+                    addStat('spirit', 20);
+                    break;
+                case 2: // 得道高人
+                    addStat('cultivation', 100);
+                    addStat('enlightenment', 2);
+                    break;
+                case 3: // 体魄强健
+                    addStat('energy', 50);
+                    addStat('maxEnergy', 20);
+                    break;
+                case 4: // 精神饱满
+                    addStat('spirit', 50);
+                    addStat('maxSpirit', 20);
+                    break;
+                case 5: // 广积福缘
+                    addStat('luck', 3);
+                    addStat('enlightenment', 2);
+                    // 额外奖励物品
+                    gameState.inventory.stones = (gameState.inventory.stones || 0) + 5;
+                    addLog("获得5枚灵石奖励！");
+                    break;
+                case 6: // 道行精深
+                    // 大幅提升属性上限
+                    addStat('maxEnergy', 30);
+                    addStat('maxSpirit', 30);
+                    addStat('energy', 100);
+                    addStat('spirit', 100);
+                    break;
+                case 7: // 丹药大师
+                    // 获得炼丹术特殊效果
+                    addStat('enlightenment', 3);
+                    // 额外给10个药材
+                    gameState.inventory.herbs = (gameState.inventory.herbs || 0) + 10;
+                    addLog("获得10份珍贵药材！");
+                    break;
+                case 8: // 符箓宗师
+                    addStat('taoism', 5);
+                    addStat('cultivation', 100);
+                    break;
+                default:
+                    addStat('cultivation', 50);
+            }
+
+            // 更新物品栏
+            updateInventory();
+
+            // 挑战完成后保存游戏状态
+            saveGame();
+
+            // 检查是否解锁新活动
+            checkActivityUnlocks();
+        }
+
+        // 触发随机事件
+        function triggerRandomEvent() {
+            // 确保停止挂机循环
+            stopAfkLoop();
+
+            // 记录本次事件时间
+            gameState.lastEventTime = gameState.timeElapsed;
+
+            // 根据玩家状态选择合适的事件
+            let availableEvents = [...gameState.events];
+
+            // 筛选适合当前玩家状态的事件
+            // 例如，如果玩家的道法很低，排除需要高道法的事件选项
+            if (gameState.stats.taoism < 5) {
+                availableEvents = availableEvents.filter(event => {
+                    return !event.options.some(option =>
+                        option.effect.toString().includes('taoism >= 5')
+                    );
+                });
+            }
+
+            // 基于当前活动筛选事件（某些活动可能触发特定事件）
+            if (gameState.currentActivity === 'herbs') {
+                // 在采药时增加与药材相关事件的权重
+                const herbEvents = availableEvents.filter(e =>
+                    e.title.includes('药') || e.desc.includes('药材') || e.desc.includes('灵芝')
+                );
+                if (herbEvents.length > 0 && Math.random() < 0.7) {
+                    availableEvents = herbEvents;
+                }
+            } else if (gameState.currentActivity === 'reading') {
+                // 在读经时增加与悟道相关事件的权重
+                const readingEvents = availableEvents.filter(e =>
+                    e.title.includes('悟') || e.desc.includes('秘籍') || e.desc.includes('古籍')
+                );
+                if (readingEvents.length > 0 && Math.random() < 0.7) {
+                    availableEvents = readingEvents;
+                }
+            }
+
+            // 随机选择一个事件
+            const event = availableEvents[Math.floor(Math.random() * availableEvents.length)];
+
+            // 播放声音提醒（如果启用）
+            if (gameState.soundEnabled) {
+                playSound('event');
+            }
+
+            // 更新事件UI
+            elements.eventTitle.textContent = event.title;
+            elements.eventDesc.textContent = event.desc;
+
+            // 清空并添加选项
+            elements.eventOptions.innerHTML = '';
+            event.options.forEach(option => {
+                const button = document.createElement('button');
+                button.className = 'btn';
+                button.textContent = option.text;
+
+                // 检查是否有条件限制
+                let isDisabled = false;
+                let disabledReason = '';
+
+                // 检查选项是否有前提条件
+                if (option.requires) {
+                    for (const [stat, value] of Object.entries(option.requires)) {
+                        if (gameState.stats[stat] < value) {
+                            isDisabled = true;
+                            disabledReason = `需要${stat === 'taoism' ? '道法' :
+                                stat === 'enlightenment' ? '悟性' :
+                                    stat === 'luck' ? '福缘' : stat}至少${value}点`;
+                            break;
+                        }
+                    }
+                }
+
+                if (isDisabled) {
+                    button.disabled = true;
+                    button.title = disabledReason;
+                    button.style.opacity = "0.6";
+                    // 添加条件提示
+                    const reasonText = document.createElement('small');
+                    reasonText.textContent = `(${disabledReason})`;
+                    reasonText.style.display = 'block';
+                    reasonText.style.marginTop = '3px';
+                    reasonText.style.color = '#888';
+                    button.appendChild(reasonText);
+                }
+
+                button.addEventListener('click', () => {
+                    // 执行选项效果
+                    option.effect();
+
+                    // 隐藏事件UI
+                    elements.randomEvent.style.display = 'none';
+                    elements.eventOverlay.style.display = 'none';
+
+                    // 添加到日志
+                    addLog(`事件：${event.title} - 选择了"${option.text}"`, 'event');
+
+                    // 更新状态和挑战
+                    updateStats();
+                    updateChallenges();
+
+                    // 如果之前在挂机，则继续挂机
+                    if (gameState.afk) {
+                        startAfkLoop();
+                    }
+                });
+                elements.eventOptions.appendChild(button);
+            });
+
+            // 显示事件UI
+            elements.randomEvent.style.display = 'block';
+            elements.eventOverlay.style.display = 'block';
+        }
+
+        // 播放音效
+        function playSound(type) {
+            try {
+                const sounds = {
+                    event: new Audio('data:audio/mp3;base64,SUQzAwAAAAACJ1RZRV...'), // 简短音效的base64编码
+                    levelUp: new Audio('data:audio/mp3;base64,SUQzAwAAAAACJ1RZRV...')
+                };
+
+                if (sounds[type]) {
+                    sounds[type].volume = 0.5; // 设置音量
+                    sounds[type].play().catch(err => console.log('无法播放音效:', err));
+                }
+            } catch (error) {
+                console.log('音效播放失败:', error);
+            }
+        }
+
+        // 添加日志
+        function addLog(text, type = "normal") {
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry ${type}`;
+            logEntry.innerHTML = `${text} <span class="time">${gameState.timeElapsed}分钟</span>`;
+
+            const logContainer = document.getElementById('log-container');
+            if (logContainer) {
+                logContainer.prepend(logEntry);
+
+                // 限制日志条目数量
+                if (logContainer.children.length > 50) {
+                    logContainer.removeChild(logContainer.lastChild);
+                }
+            }
+
+            // 对重要日志添加动画效果
+            if (type === 'achievement' || type === 'level-up') {
+                logEntry.style.animation = 'none'; // 重置动画
+                setTimeout(() => {
+                    logEntry.style.animation = 'pulse 2s ease-in-out';
+                }, 10);
+            }
+        }
+
+        // 确保停止挂机循环时清理干净
+        function stopAfkLoop() {
+            if (afkInterval) {
+                clearInterval(afkInterval);
+                afkInterval = null;
+            }
+        }
+
+        // 初始化标签系统
+        function initTabs() {
+            // 获取所有标签和内容区域
+            const tabs = document.querySelectorAll('.tab');
+            const tabContents = document.querySelectorAll('.tab-content');
+
+            // 为每个标签添加点击事件
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    // 移除所有活跃状态
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tabContents.forEach(content => content.classList.remove('active'));
+
+                    // 设置当前标签为活跃
+                    tab.classList.add('active');
+
+                    // 获取标签对应的内容ID
+                    const tabId = tab.getAttribute('data-tab');
+                    const tabContent = document.getElementById(`${tabId}-tab`);
+
+                    // 显示对应的内容
+                    if (tabContent) {
+                        tabContent.classList.add('active');
+                    }
+                });
+            });
+        }
+
+        // 更新所有UI
+        function updateAllUI() {
+            updateStats();
+            updateChallenges();
+            updateInventory();
+            updateActivityStatus();
+            checkActivityUnlocks();
+        }
+
+        // 更新活动状态
+        function updateActivityStatus() {
+            // 移除所有活动的active状态
+            document.querySelectorAll('.activity').forEach(activity => {
+                if (activity.getAttribute('data-activity') !== gameState.currentActivity) {
+                    activity.classList.remove('active');
+                } else {
+                    activity.classList.add('active');
+                }
+            });
+
+            // 更新当前活动显示
+            if (gameState.currentActivity && elements.currentActivity) {
+                elements.currentActivity.textContent =
+                    gameState.activities[gameState.currentActivity].name;
+            } else if (elements.currentActivity) {
+                elements.currentActivity.textContent = '闲散';
+            }
+        }
+
+        // 更新物品栏显示
+        function updateInventory() {
+            // 更新药材数量
+            const herbsElement = document.getElementById('herbs-count');
+            if (herbsElement && gameState.inventory && typeof gameState.inventory.herbs !== 'undefined') {
+                herbsElement.textContent = gameState.inventory.herbs;
+            }
+
+            // 更新符箓数量
+            const talismansElement = document.getElementById('talismans-count');
+            if (talismansElement && gameState.inventory && typeof gameState.inventory.talismans !== 'undefined') {
+                talismansElement.textContent = gameState.inventory.talismans;
+            }
+
+            // 更新丹药数量
+            const potionsElement = document.getElementById('potions-count');
+            if (potionsElement && gameState.inventory && typeof gameState.inventory.potions !== 'undefined') {
+                potionsElement.textContent = gameState.inventory.potions;
+            }
+
+            // 更新灵石数量
+            const stonesElement = document.getElementById('stones-count');
+            if (stonesElement && gameState.inventory && typeof gameState.inventory.stones !== 'undefined') {
+                stonesElement.textContent = gameState.inventory.stones;
+            }
+        }
+
+        // 检查并解锁活动
+        function checkActivityUnlocks() {
+            document.querySelectorAll('.activity[data-requirement]').forEach(activity => {
+                const requirements = activity.getAttribute('data-requirement').split(',');
+                let allMet = true;
+                let missingReqs = [];
+
+                for (let req of requirements) {
+                    const [stat, value] = req.split(':');
+
+                    if (stat === 'level') {
+                        const currentLevelIndex = gameState.levels.findIndex(l => l.name === gameState.stats.level);
+                        const requiredLevelIndex = gameState.levels.findIndex(l => l.name === value);
+
+                        if (currentLevelIndex < requiredLevelIndex) {
+                            allMet = false;
+                            missingReqs.push(`需要境界：${value}`);
+                            break;
+                        }
+                    } else {
+                        if (gameState.stats[stat] < parseFloat(value)) {
+                            allMet = false;
+                            const statNames = {
+                                'cultivation': '修为',
+                                'spirit': '精神力',
+                                'energy': '体力',
+                                'enlightenment': '悟性',
+                                'luck': '福缘',
+                                'taoism': '道法',
+                                'maxSpirit': '精神力上限',
+                                'maxEnergy': '体力上限'
+                            };
+
+                            missingReqs.push(`${statNames[stat] || stat}：${value}`);
+                            break;
+                        }
+                    }
+                }
+
+                if (allMet) {
+                    if (activity.classList.contains('locked')) {
+                        activity.classList.remove('locked');
+                        const activityId = activity.getAttribute('data-activity');
+                        addLog(`解锁了新的修炼方式：${gameState.activities[activityId].name}`, 'achievement');
+
+                        // 移除提示元素
+                        const tooltipEl = activity.querySelector('.unlock-tooltip');
+                        if (tooltipEl) {
+                            tooltipEl.remove();
+                        }
+                    }
+                } else {
+                    activity.classList.add('locked');
+
+                    // 添加或更新未满足条件的提示
+                    let tooltipEl = activity.querySelector('.unlock-tooltip');
+                    if (!tooltipEl) {
+                        tooltipEl = document.createElement('div');
+                        tooltipEl.className = 'unlock-tooltip';
+                        activity.appendChild(tooltipEl);
+                    }
+
+                    tooltipEl.innerHTML = `<strong>未满足条件:</strong><br>` +
+                        missingReqs.map(req => `- ${req}`).join('<br>');
+                }
+            });
+        }
+
+        // 从本地存储加载游戏
+        function loadGame() {
+            try {
+                // 先加载设置
+                const savedSettings = localStorage.getItem('daoshiSettings');
+                if (savedSettings) {
+                    gameState.settings = JSON.parse(savedSettings);
+                }
+
+                // 尝试加载主存档
+                const savedGame = localStorage.getItem('daoshiGame');
+
+                // 如果主存档不可用，尝试加载备份
+                if (!savedGame) {
+                    const backupGame = localStorage.getItem('daoshiGame_backup');
+                    if (backupGame) {
+                        addLog("主存档丢失，正在从备份恢复...", "system");
+                        loadGameData(backupGame);
+                        // 恢复后立即保存到主存档
+                        saveGame();
+                        return;
+                    }
+                } else {
+                    // 主存档可用，正常加载
+                    loadGameData(savedGame);
+                    return;
+                }
+
+                // 如果没有存档，初始化新游戏
+                initNewGame();
+
+            } catch (error) {
+                console.error("加载游戏时出错:", error);
+                addLog("加载游戏数据失败", "error");
+
+                // 出错时尝试从备份恢复
+                try {
+                    const backupGame = localStorage.getItem('daoshiGame_backup');
+                    if (backupGame) {
+                        addLog("尝试从备份恢复...", "system");
+                        loadGameData(backupGame);
+                        return;
+                    }
+                } catch (backupError) {
+                    console.error("备份恢复失败:", backupError);
+                }
+
+                // 如果一切失败，初始化新游戏
+                initNewGame();
+            }
+
+            // 加载后更新UI
+            updateAllUI();
+        }
+
+        // 初始化新游戏
+        function initNewGame() {
+            // 初始季节和时间
+            gameState.season = 'spring';
+            gameState.time = 8; // 初始时间为早上8点
+            gameState.dayTime = true;
+            gameState.daysPassed = 1;
+            gameState.lastBackup = Date.now();
+
+            // 检查活动解锁状态
+            checkActivityUnlocks();
+
+            addLog("开始新的修道之旅");
+        }
+
+        // 加载游戏数据
+        function loadGameData(savedGameString) {
+            const savedState = JSON.parse(savedGameString);
+
+            // 检查版本兼容性 (未来可扩展)
+            // if (savedState.version < requiredVersion) { 执行数据迁移逻辑 }
+
+            // 合并保存的状态到当前游戏状态
+            if (savedState.stats) {
+                Object.keys(savedState.stats).forEach(key => {
+                    gameState.stats[key] = savedState.stats[key];
+                });
+            }
+
+            if (savedState.inventory) {
+                gameState.inventory = savedState.inventory;
+            }
+
+            if (savedState.timeElapsed) {
+                gameState.timeElapsed = savedState.timeElapsed;
+            }
+
+            if (savedState.daysPassed) {
+                gameState.daysPassed = savedState.daysPassed;
+            }
+
+            if (savedState.season) {
+                gameState.season = savedState.season;
+            }
+
+            if (savedState.time) {
+                gameState.time = savedState.time;
+            }
+
+            if (savedState.dayTime !== undefined) {
+                gameState.dayTime = savedState.dayTime;
+            }
+
+            if (savedState.challenges) {
+                gameState.challenges = savedState.challenges;
+            }
+
+            if (savedState.timestamp) {
+                gameState.lastLoadTime = savedState.timestamp;
+            }
+
+            // 记录上次备份时间
+            if (savedState.timestamp) {
+                gameState.lastBackup = savedState.timestamp;
+            }
+
+            // 更新挂机状态
+            if (savedState.currentActivity) {
+                selectActivity(savedState.currentActivity);
+            }
+
+            // 检查活动解锁状态
+            checkActivityUnlocks();
+
+            addLog("游戏数据已加载", "achievement");
+        }
+
+        // 保存游戏到本地存储
+        function saveGame() {
+            try {
+                // 创建要保存的游戏数据对象
+                const gameData = {
+                    version: "1.0", // 游戏版本，方便未来处理数据兼容性
+                    timestamp: Date.now(), // 保存时间戳
+                    stats: gameState.stats,
+                    inventory: gameState.inventory,
+                    timeElapsed: gameState.timeElapsed,
+                    currentActivity: gameState.currentActivity,
+                    daysPassed: gameState.daysPassed,
+                    season: gameState.season,
+                    time: gameState.time,
+                    dayTime: gameState.dayTime,
+                    challenges: gameState.challenges
+                };
+
+                // 保存主存档
+                localStorage.setItem('daoshiGame', JSON.stringify(gameData));
+
+                // 创建自动备份 (每小时一次)
+                if (!gameState.lastBackup || (Date.now() - gameState.lastBackup > 3600000)) {
+                    localStorage.setItem('daoshiGame_backup', JSON.stringify(gameData));
+                    gameState.lastBackup = Date.now();
+                    console.log("创建了游戏数据备份");
+                }
+            } catch (error) {
+                console.error("保存游戏时出错:", error);
+                addLog("保存游戏数据失败", "error");
+            }
+        }
+
+        // 重置游戏
+        function resetGame() {
+            if (confirm("确定要重置游戏吗？所有进度将会丢失！")) {
+                // 清除游戏数据
+                localStorage.removeItem('daoshiGame');
+
+                // 保留用户设置
+                const savedSettings = gameState.settings;
+
+                // 重置游戏状态
+                gameState.stats = {
+                    name: "清虚子",
+                    level: "初入道门",
+                    cultivation: 0,
+                    spirit: 10,
+                    energy: 100,
+                    enlightenment: 1,
+                    luck: 1,
+                    taoism: 1,
+                    maxSpirit: 100,
+                    maxEnergy: 100
+                };
+
+                gameState.inventory = {
+                    herbs: 0,
+                    talismans: 0,
+                    potions: 0,
+                    stones: 0
+                };
+
+                gameState.currentActivity = null;
+                gameState.afk = false;
+                gameState.timeElapsed = 0;
+
+                // 重置挑战状态
+                gameState.challenges.forEach(challenge => {
+                    challenge.completed = false;
+                });
+
+                // 初始季节和时间
+                gameState.season = 'spring';
+                gameState.time = 8;
+                gameState.dayTime = true;
+                gameState.daysPassed = 1;
+
+                // 还原用户设置
+                gameState.settings = savedSettings;
+
+                // 如果正在挂机，停止挂机
+                if (afkInterval) {
+                    stopAfkLoop();
+                    elements.toggleAfk.textContent = "开始挂机修炼";
+                    document.getElementById('afk-status').classList.remove('afk-active');
+                    const statusValue = document.querySelector('#afk-status .status-value');
+                    if (statusValue) {
+                        statusValue.textContent = "未开始";
+                    }
+                }
+
+                // 清空日志
+                const logContainer = document.getElementById('log-container');
+                if (logContainer) {
+                    logContainer.innerHTML = '';
+                }
+
+                // 更新UI
+                updateAllUI();
+
+                // 重新检查活动解锁状态
+                checkActivityUnlocks();
+
+                // 添加重置游戏的日志
+                addLog("游戏已重置，开始新的修道之旅！", "achievement");
+            }
+        }
+
+        // 使用丹药功能
+        function usePotion() {
+            if (gameState.inventory.potions && gameState.inventory.potions > 0) {
+                gameState.inventory.potions--;
+
+                // 恢复体力和精神力
+                gameState.stats.energy = gameState.stats.maxEnergy;
+                gameState.stats.spirit = gameState.stats.maxSpirit;
+
+                // 小概率提升修为
+                if (Math.random() < 0.2) {
+                    addStat('cultivation', 20);
+                    addLog("服用丹药后你突然顿悟，修为大增！", "achievement");
+                } else {
+                    addLog("服用丹药恢复了体力和精神力！");
+                }
+
+                // 更新界面
+                updateStats();
+                updateInventory();
+            } else {
+                addLog("你没有丹药可用！", "error");
+            }
+        }
+
+        // 启动游戏
+        initGame();
+
+        function gotoPage(url) {
+            url && window.open(url);
+        }
+    </script>
+
+    <script>
+        // 创建全局样式和弹窗结构（兼容移动端）
+        document.addEventListener('DOMContentLoaded', function () {
+            const style = document.createElement('style');
+            style.textContent = `
+    .meal-alert-mask {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        z-index: 9999;
+        display: none;
+    }
+    .meal-alert-box {
+        position: relative;
+        width: 80%;
+        max-width: 300px;
+        background: #fff;
+        border-radius: 12px;
+        padding: 20px;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+    }
+    .meal-close-btn {
+        display: block;
+        margin: 15px auto 0;
+        padding: 8px 20px;
+        background: #007bff;
+        color: white;
+        border: none;
+        border-radius: 25px;
+        font-size: 12px;
+        touch-action: manipulation;
+    }
+`;
+            document.head.appendChild(style);
+
+            const alertHTML = `
+    <div class="meal-alert-mask">
+        <div class="meal-alert-box">
+            <h3>🍴 用餐时间到！</h3>
+            <p>记得及时补充能量哦~</p>
+            <div style="display: flex;">
+                <button class="meal-close-btn" style="background-color: #ffffff;color: #888888;border: 1px solid #888888;">关闭</button>
+                <button class="meal-close-btn meal-open-btn">优惠卷</button>
+            </div>
+        </div>
+    </div>
+`;
+            document.body.insertAdjacentHTML('beforeend', alertHTML);
+        });
+
+        // 弹窗控制逻辑 
+        const mealAlert = {
+            init() {
+                this.bindEvents();
+                this.startTimer();
+                // this.showAlert();
+            },
+
+            bindEvents() {
+                document.addEventListener('click', (e) => {
+                    if (e.target.closest('.meal-close-btn')) {
+                        this.hideAlert();
+                    }
+
+                    if (e.target.closest('.meal-open-btn')) {
+                        gotoPage('https://moyugame965.github.io/Coupon/');
+                    }
+                });
+            },
+
+            showAlert() {
+                document.querySelector('.meal-alert-mask').style.display = 'block';
+            },
+
+            hideAlert() {
+                document.querySelector('.meal-alert-mask').style.display = 'none';
+            },
+
+            checkTime() {
+                const now = new Date();
+                const currentHour = now.getHours();
+                const currentMin = now.getMinutes();
+
+                // 在11:00和17:00整点触发，误差控制在1分钟内 
+                if ((currentHour === 11 || currentHour === 12 || currentHour === 17 || currentHour === 18) && currentMin === 0) {
+                    this.showAlert();
+                }
+            },
+
+            startTimer() {
+                // 每分钟检查一次时间 
+                setInterval(() => this.checkTime(), 60000);
+                // 初始化立即检查（避免页面打开时正好处于目标时间）
+                this.checkTime();
+            }
+        };
+
+        // 初始化 
+        mealAlert.init();
+        // setTimeout(() => {
+        //     mealAlert.showAlert();
+        // }, 2000);
+
+    </script>
+</body>
+
+</html>
